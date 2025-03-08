@@ -1,13 +1,13 @@
 # SingleCell-RNA-seq-Learning
 This repo documents my practice in single-cell RNA-seq analysis, using 10X Genomics data to perform quality control, normalisation, dimensionality reduction (PCA/UMAP), and automated cell type assignment with cellassign. It is based on tutorials but adapted for clarity and deeper learning.
 
-# scRNA-seq Data Analysis with `cellassign`
+# scRNA-seq Data Analysis with cellassign
 
 This repository documents my hands-on practice in single-cell RNA-seq analysis, using 10X Genomics data for:  
-- Quality control with `scater` and `scran`  
+- Quality control with scater and scran  
 - Normalisation & filtering
 - Dimensionality reduction (PCA, UMAP)  
-- Cell type assignment using `cellassign`  
+- Cell type assignment using cellassign 
 
 This project follows structured methods from existing tutorials but includes personal modifications for clarity and a better learning experience.  
 
@@ -15,8 +15,8 @@ This project follows structured methods from existing tutorials but includes per
 
 ## Data Used  
 - Dataset: Processed 10X Genomics single-cell RNA-seq data  
-- Format: `matrix.mtx`, `genes.tsv`, `barcodes.tsv`  
-- Processing: Loaded as a `SingleCellExperiment` object  
+- Format: matrix.mtx, genes.tsv, barcodes.tsv
+- Processing: Loaded as a SingleCellExperiment object  
 
 ---
 
@@ -25,7 +25,7 @@ This project follows structured methods from existing tutorials but includes per
 ✔ Perform quality control (mitochondrial & ribosomal genes filtering)
 ✔ Compute size factors and normalise expression
 ✔ Run PCA & UMAP for visualisation
-✔ Assign cell types using `cellassign`
+✔ Assign cell types using cellassign
 
 ---
 
