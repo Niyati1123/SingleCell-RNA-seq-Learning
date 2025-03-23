@@ -1,0 +1,187 @@
+# Quality control of scRNA-seq data
+## Getting started
+First we will do the following key things to our data:
+
+1. Get some extra gene data, including the chromosome name
+2. Compute the size factors
+3. Compute normalized log counts 
+
+```{r}
+library(biomaRt)
+# Connect to the Ensembl database
+mart <- useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+attributes <- listAttributes(mart)
+head(attributes)  # Show the first few attributes
+
+# Fetch Gene Annotations from Ensembl
+gene_annotations <- getBM(
+  attributes = c("ensembl_gene_id", "hgnc_symbol", "entrezgene_id", 
+                 "start_position", "end_position", "chromosome_name"),
+  filters = "ensembl_gene_id",
+  values = rownames(sce),
+  mart = mart
+)
+
+gene_annotations <- gene_annotations[!duplicated(gene_annotations$ensembl_gene_id), ]
+# Convert rowData to DataFrame for easy handling
+row_data <- as.data.frame(rowData(sce))
+
+# Ensure "ID" matches "ensembl_gene_id"
+colnames(row_data)[colnames(row_data) == "ID"] <- "ensembl_gene_id"
+
+# Match the order of genes in `sce`
+gene_annotations <- gene_annotations[match(row_data$ensembl_gene_id, gene_annotations$ensembl_gene_id), ]
+
+# Combine the two data sets without adding new rows
+row_data <- cbind(row_data, gene_annotations[, -1])  # Remove duplicate `ensembl_gene_id` column
+
+# Convert back to DataFrame for `SingleCellExperiment`
+rowData(sce) <- DataFrame(row_data)
+```
+
+```{r}
+names(assays(sce))
+```
+
+```{r}
+head(sizeFactors(sce))
+```
+
+```{r}
+# Load scran for normalization
+# BiocManager::install("scran")
+library(scran)
+library(SingleCellExperiment)
+library(scater)
+# Compute size factors for normalization
+sce <- computeSumFactors(sce)
+
+# Check if size factors were computed
+summary(sizeFactors(sce))
+
+# Compute log-transformed normalized counts
+sce <- logNormCounts(sce)
+```
+
+```{r}
+names(assays(sce))  # Should now include "logcounts"
+```
+
+```{r}
+sce <- runPCA(sce)
+sce <- runUMAP(sce)
+plotPCA(sce, colour_by = "Sample")  # Example PCA plot
+plotUMAP(sce, colour_by = "Sample")  # Example UMAP plot
+```
+```{r}
+reducedDims(sce)
+```
+
+```{r}
+head(reducedDims(sce)[['PCA']])
+```
+
+# I would like to add the symbols to the rownames:
+```{r}
+rownames(sce) <- paste0(rowData(sce)$Symbol, "_", rownames(sce))
+head(rownames(sce))
+```
+
+# We next need to work out which genes are mitochondrial and ribosomal as these work well for QC:
+```{r}
+# Get Mitochondrial genes for QC:
+mt_genes <- which(rowData(sce)$chromosome_name == "MT")
+ribo_genes <- grepl("^RP[LS]", rowData(sce)$Symbol)
+feature_ctrls <- list(mito = rownames(sce)[mt_genes],
+                      ribo = rownames(sce)[ribo_genes])
+
+lapply(feature_ctrls, head)
+```
+
+# And call the `calcualteQCMetrics` function in scater:
+```{r}
+library(scater)
+
+# Compute QC metrics per cell
+qc_metrics <- perCellQCMetrics(sce, subsets = feature_ctrls)
+
+# Add QC metrics to colData(sce)
+colData(sce) <- cbind(colData(sce), qc_metrics)
+
+# Check QC metrics
+head(colData(sce))
+```
+
+```{r}
+datatable(head(as.data.frame(colData(sce))))
+```
+
+## What to look for
+```{r}
+plotColData(sce, x = "detected", y = "subsets_mito_percent")
+colnames(colData(sce))
+```
+
+Typically retain cells that have < 10% mitochondrial transcripts and > 1000 features, but this is **dataset dependent** - for example, tumour cells typically have higher metabolic burden, leading to higher % mitochondrial (we typically use 20% as a filter then).
+
+```{r}
+plotPCA(sce, colour_by = "subsets_mito_percent")
+```
+For this I am going to use a simple threshold of 10% mitochondrial. Importantly, we re-compute the QC metrics, size factors and normalization
+
+```{r}
+mito_thresh <- 10  # Adjust threshold based on dataset
+sce_qc <- sce[, sce$subsets_mito_percent < mito_thresh]
+ncol(sce_qc)  # Must be greater than zero
+mito_thresh <- 20  # Allow more cells
+sce_qc <- sce[, sce$subsets_mito_percent < mito_thresh]
+ncol(sce_qc)  # Check again
+library(BiocParallel)  # For parallel processing
+
+clusters <- scran::quickCluster(sce_qc)
+sce_qc <- scran::computeSumFactors(sce_qc, clusters = clusters, BPPARAM = MulticoreParam(2))  # Use fewer cores if needed
+sce_qc <- logNormCounts(sce_qc)
+```
+
+```{r}
+sce_qc <- runPCA(sce_qc)
+sce_qc <- runUMAP(sce_qc)
+```
+
+```{r}
+# plotPCA(sce_qc, colour_by = "total_features_by_counts")
+plotUMAP(sce_qc, colour_by = "subsets_mito_percent")
+```
+
+```{r}
+plotScater(sce)
+plotScater(sce_qc)
+```
+
+```{r}
+plotHighestExprs(sce_qc)
+```
+## Some useful plotting functions in Scater
+### Reduced dimension plots
+I can call 
+* `plotPCA(sce, colour_by = "x")`
+* `plotUMAP(sce, colour_by = "x")`
+* `plotTSNE(sce, colour_by = "x")`
+where `x` is:
+* Any column of `colData(sce)` (= the cell specific data) to colour by metadata
+* Any gene name in `rownames(sce)` to colour by expression
+
+```{r}
+plotPCA(sce, colour_by = "SAA1_ENSG00000173432")
+```
+### Additional plots
+
+```{r}
+plotColData(sce_qc, x = "total", y = "subsets_mito_percent")
+```
+
+```{r}
+plotExpression(sce_qc, 
+               x = "total", 
+               features = "GAPDH_ENSG00000111640")
+```
