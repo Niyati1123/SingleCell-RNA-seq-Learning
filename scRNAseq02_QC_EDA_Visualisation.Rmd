@@ -1,6 +1,7 @@
 # Quality control of scRNA-seq data
 ## Getting started
-First we will do the following key things to our data:
+
+First I will do the following key things to the data:
 
 1. Get some extra gene data, including the chromosome name
 2. Compute the size factors
@@ -56,7 +57,7 @@ library(scater)
 # Compute size factors for normalization
 sce <- computeSumFactors(sce)
 
-# Check if size factors were computed
+# Check if size factors Ire computed
 summary(sizeFactors(sce))
 
 # Compute log-transformed normalized counts
@@ -70,8 +71,8 @@ names(assays(sce))  # Should now include "logcounts"
 ```{r}
 sce <- runPCA(sce)
 sce <- runUMAP(sce)
-plotPCA(sce, colour_by = "Sample")  # Example PCA plot
-plotUMAP(sce, colour_by = "Sample")  # Example UMAP plot
+plotPCA(sce, colthe_by = "Sample")  # Example PCA plot
+plotUMAP(sce, colthe_by = "Sample")  # Example UMAP plot
 ```
 ```{r}
 reducedDims(sce)
@@ -87,7 +88,7 @@ rownames(sce) <- paste0(rowData(sce)$Symbol, "_", rownames(sce))
 head(rownames(sce))
 ```
 
-# We next need to work out which genes are mitochondrial and ribosomal as these work well for QC:
+# I next need to work out which genes are mitochondrial and ribosomal as these work Ill for QC:
 ```{r}
 # Get Mitochondrial genes for QC:
 mt_genes <- which(rowData(sce)$chromosome_name == "MT")
@@ -122,12 +123,12 @@ plotColData(sce, x = "detected", y = "subsets_mito_percent")
 colnames(colData(sce))
 ```
 
-Typically retain cells that have < 10% mitochondrial transcripts and > 1000 features, but this is **dataset dependent** - for example, tumour cells typically have higher metabolic burden, leading to higher % mitochondrial (we typically use 20% as a filter then).
+Typically retain cells that have < 10% mitochondrial transcripts and > 1000 features, but this is **dataset dependent** - for example, tumthe cells typically have higher metabolic burden, leading to higher % mitochondrial (I typically use 20% as a filter then).
 
 ```{r}
-plotPCA(sce, colour_by = "subsets_mito_percent")
+plotPCA(sce, colthe_by = "subsets_mito_percent")
 ```
-For this I am going to use a simple threshold of 10% mitochondrial. Importantly, we re-compute the QC metrics, size factors and normalization
+For this I am going to use a simple threshold of 10% mitochondrial. Importantly, I re-compute the QC metrics, size factors and normalization
 
 ```{r}
 mito_thresh <- 10  # Adjust threshold based on dataset
@@ -139,7 +140,7 @@ ncol(sce_qc)  # Check again
 library(BiocParallel)  # For parallel processing
 
 clusters <- scran::quickCluster(sce_qc)
-sce_qc <- scran::computeSumFactors(sce_qc, clusters = clusters, BPPARAM = MulticoreParam(2))  # Use fewer cores if needed
+sce_qc <- scran::computeSumFactors(sce_qc, clusters = clusters, BPPARAM = MulticoreParam(2))  # Use feIr cores if needed
 sce_qc <- logNormCounts(sce_qc)
 ```
 
@@ -149,8 +150,8 @@ sce_qc <- runUMAP(sce_qc)
 ```
 
 ```{r}
-# plotPCA(sce_qc, colour_by = "total_features_by_counts")
-plotUMAP(sce_qc, colour_by = "subsets_mito_percent")
+# plotPCA(sce_qc, colthe_by = "total_features_by_counts")
+plotUMAP(sce_qc, colthe_by = "subsets_mito_percent")
 ```
 
 ```{r}
@@ -164,15 +165,15 @@ plotHighestExprs(sce_qc)
 ## Some useful plotting functions in Scater
 ### Reduced dimension plots
 I can call 
-* `plotPCA(sce, colour_by = "x")`
-* `plotUMAP(sce, colour_by = "x")`
-* `plotTSNE(sce, colour_by = "x")`
+* `plotPCA(sce, colthe_by = "x")`
+* `plotUMAP(sce, colthe_by = "x")`
+* `plotTSNE(sce, colthe_by = "x")`
 where `x` is:
-* Any column of `colData(sce)` (= the cell specific data) to colour by metadata
-* Any gene name in `rownames(sce)` to colour by expression
+* Any column of `colData(sce)` (= the cell specific data) to colthe by metadata
+* Any gene name in `rownames(sce)` to colthe by expression
 
 ```{r}
-plotPCA(sce, colour_by = "SAA1_ENSG00000173432")
+plotPCA(sce, colthe_by = "SAA1_ENSG00000173432")
 ```
 ### Additional plots
 
