@@ -1,0 +1,29 @@
+# Using CellAssign to assign cells to known types
+
+```{r}
+library(cellassign)
+```
+# In this example, the data I have performed QC and exploratory analysis of liver cells, that I expect to contain a certain number of cell types. To begin, I specify a list, where each item corresponds to a set of marker genes for a given cell type:
+
+```{r}
+liver_marker_list <- list(
+        Hepatocytes = c("ALB", "HAMP", "ARG1", "PCK1", "AFP", "BCHE"), 
+        LSECs = c("CALCRL", "FCGR2B", "VWF"),
+        Cholangiocytes = c("KRT19", "EPCAM", "CLDN4", "CLDN10", "SOX9", "MMP7", "CXCL1", "CFTR", "TFF2", "KRT7", "CD24"), 
+        `Hepatic Stellate Cells` = c("ACTA2", "COL1A1", "COL1A2", "COL3A1", "DCN", "MYL9"),
+        Macrophages = c("CD68", "MARCO", "FCGR3A", "LYZ", "PTPRC"),
+        `ab T cells` = c("CD2", "CD3D", "TRAC", "IL32", "CD3E", "PTPRC"),
+        `gd T cells` = c("NKG7", "FCGR3A", "HOPX", "GNLY", "KLRF1", "CMC1", "CCL3", "PTPRC"),
+        `NK cells` = c("GZMK", "KLRF1", "CCL3", "CMC1", "NKG7", "PTPRC"),
+        `Plasma cells` = c("CD27", "IGHG1", "CD79A", "IGHG2", "PTPRC", "IGKC"),
+        `Mature B cells` = c("MS4A1", "LTB", "CD52", "IGHD", "CD79A", "PTPRC", "IGKC"),
+        `Erythroid cells` = c("HBB", "SLC25A37", "CA1", "ALAS2")
+)
+```
+
+# To begin, I used `cellassign`'s `marker_list_to_mat` function to convert this into a (binary) cell type by marker matrix:
+
+```{r, fig.width = 5, fig.height = 10}
+mgi <- marker_list_to_mat(liver_marker_list, include_other = FALSE)
+pheatmap(mgi)
+```
