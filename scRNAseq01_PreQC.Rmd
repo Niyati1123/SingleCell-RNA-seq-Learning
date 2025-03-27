@@ -116,7 +116,7 @@ reducedDims(sce)
 head(sizeFactors(sce))
 ```
 
-# The ability to have multiple `assays` is one of the unique advantages of the SingleCellExperiment approach - I can carry around `counts`, `logcounts`, and any other weird data transformation I might like. Right now we only have raw counts, because that's what we've read in:
+# The ability to have multiple `assays` is one of the unique advantages of the SingleCellExperiment approach - I can carry around `counts`, `logcounts`, and any other weird data transformation I might like. Right now I only have raw counts:
 
 ```{r}
 names(assays(sce))
